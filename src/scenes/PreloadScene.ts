@@ -1,0 +1,330 @@
+import Phaser from 'phaser';
+
+export default class PreloadScene extends Phaser.Scene {
+  // globで取得したファイルリスト（パスを整形済み）
+  private bossImages = [
+    'assets/b/avalab--edPduVRTqKjqCa9txUEyw-removebg-preview.png',
+    'assets/b/avalab-ZrKRZGiJQBaceONgn9s4rw-removebg-preview.png',
+    'assets/b/avalab-9PJXIDxnR2CRKdlYBAatWA-removebg-preview.png',
+    'assets/b/avalab-o2vmGG-eQo-BEpg2RMtTZA__1_-removebg-preview.png',
+    'assets/b/avalab-20250809-55fbqk4mS7iLBl-TzOaDqg-removebg-preview (1).png'
+  ];
+
+  private cutinImages = [
+    'assets/c/avalab-h9wHs2a0RddmGg21Ce3k6IOw.png',
+    'assets/c/avalab-cdAzOHvddbQp-T0DRa1cTgZQ (3).png',
+    'assets/c/avalab-A-jOaxegSXy_lTAzu2ddQskA (3).png',
+    'assets/c/avalab-sbJVwOJATYqkUszsssMRlSlaw.png',
+    'assets/c/avalab-jgDCQWaVT96ssVRjVv4tGitA.png',
+    'assets/c/avalab-NQGWlK2cSuKesssLlz82Bl9vA.png',
+    'assets/c/avalab-QGZKwHgaT7-Sxd9sscYVXgQw (2).png',
+    'assets/c/avalab-u6teV2XBQ3G2Z0MmAssvuNrw.png',
+    'assets/c/avalab-KRUCZ25TSdum0ddg-o4wecJw.png',
+    'assets/c/avalab--LP719NDQgW39mddMQJoD_2w.png',
+    'assets/c/avalab-qPpiD-gzT_q6ddddq54truZC8g (1).png',
+    'assets/c/avalab-m_0RsZOaRN25zdddhwBTq_Fuw (3).png',
+    'assets/c/avalab-zaqkGCiqSdGhuKdEMhyqddpw (1).png',
+    'assets/c/avalab-pZdgQW2mRUOpssSYWYyJxU5w (1).png',
+    'assets/c/avalab-Zn_KM4vfS-yDe8mddCEkab6A.png',
+    'assets/c/avalab-WWvnYOOLT86onPJeSddRQeYA (1).png',
+    'assets/c/avalab-opgDKjPsQAOacEBGfsssAqjUw (1).png',
+    'assets/c/avalab-7E_PbP3iTZ2GSuCRffghtKmA (2).png',
+    'assets/c/avalab-TeG-BDDRR1maQj45vddbXw8g - コピー.png',
+    'assets/c/115277fe-d41kk8-4d5b-be61-00c4dadae35c.png',
+    'assets/c/avalab-grqoRrQNQdSMYg111FO95DFeQ (1).png',
+    'assets/c/avalab-3OKMb0kKTOernbtZrrrtX-YxQ (1).png',
+    'assets/c/avalab-yw9fH2v3QrWf0rq111m7co0zQ.png'
+  ];
+
+  private enemyImages = [
+    'assets/e/avalab-FyWGpvtbR16rUIYZQs11104EA-removebg-preview.png',
+    'assets/e/avalab-GXRdnGS8Q1e9WIhiVejAtg-removebg-preview-removebg-preview.png',
+    'assets/e/avalab-20250809-bvvaxo_KQ3miR1htqa1cKQ-removebg-preview.png',
+    'assets/e/avalab-20250809-xT-_n8lETYSiJEoxs8wE0w-removebg-preview.png',
+    'assets/e/avalab-20250809-NWvmfRJDR8iCWwvwERnLcw-removebg-preview.png',
+    'assets/e/avalab-20250809-ggRRo7f2RW6cgz7w9gq02w-removebg-preview.png',
+    'assets/e/avalab-20250809-yFf6HhorQM-KdyLhmsgtbw-removebg-preview.png',
+    'assets/e/avalab-20250809-eGTi7XL0T-eqG8wmIGjSMw-removebg-preview.png',
+    'assets/e/avalab-20250809-hn6hjjz8QrqsEX-lB3Jkww-removebg-preview.png',
+    'assets/e/thumb-removebg-preview (12).png',
+    'assets/e/thumb-removebg-preview (11).png',
+    'assets/e/thumb-removebg-preview (10).png',
+    'assets/e/thumb-removebg-preview (9).png',
+    'assets/e/thumb-removebg-preview (8).png',
+    'assets/e/thumb-removebg-preview (7).png',
+    'assets/e/thumb-removebg-preview (6).png',
+    'assets/e/thumb-removebg-preview (5).png',
+    'assets/e/thumb-removebg-preview (4).png',
+    'assets/e/thumb-removebg-preview (3).png',
+    'assets/e/thumb-removebg-preview (2).png',
+    'assets/e/thumb-removebg-preview (1).png',
+    'assets/e/thumb-removebg-preview.png',
+    'assets/e/avalab-20250809-msDduIz4QP6QRytAW9LtRg-removebg-preview (1).png',
+    'assets/e/avalab-a9894a6c-a96d-4954-be47-b32b022e8890-removebg-preview.png',
+    'assets/e/avalab-32e46254-7fe1-48fb-9140-1c0b958d716c__1_-removebg-preview (1).png',
+    'assets/e/avalab-41547f0e-d7c9-4344-8163-6cd8a144ecb5-removebg-preview.png',
+    'assets/e/avalab-0e360705-aa88-43e7-9fc7-2603bd6e6113-removebg-preview.png',
+    'assets/e/avalab-474e4776-6a05-4e5e-a9db-56adb1be1ce5__1_-removebg-preview.png',
+    'assets/e/avalab-29a1499c-046f-4249-b217-3396c84a3123-removebg-preview.png',
+    'assets/e/avalab-719c0d34-1ecc-401d-8242-dff824678c6c-removebg-preview (1).png',
+    'assets/e/avalab-6bcabeb1-5b16-489c-baad-9f878afa569c-removebg-preview.png',
+    'assets/e/avalab-134f99de-2e24-4a0c-a718-a24b7429c553__1_-removebg-preview.png',
+    'assets/e/avalab-jdsQ9QDPSjOQmZR61kkzjw-removebg-preview.png',
+    'assets/e/avalab-bf21iPncS76EbVYeXEpJTQ-removebg-preview.png',
+    'assets/e/avalab-FOxg9NIVQWWxgX1TtIm93A-removebg-preview.png',
+    'assets/e/avalab-kzBZ4vtuQFOXdpWdMeQUQA-removebg-preview (1).png',
+    'assets/e/avalab-JDJ76SNuRMWas_VaXicLKg-removebg-preview.png',
+    'assets/e/avalab-3l4nNyK3SFaWhZaJmOcPAA__1_-removebg-preview.png',
+    'assets/e/avalab-3xHAjesuQHGadwAhMJEwmA-removebg-preview.png',
+    'assets/e/avalab-aHPA85RKQTmLYmActJsCZg-removebg-preview (1).png',
+    'assets/e/avalab-bzTgei5dQdGEnk_dQRyK3A-removebg-preview (1).png',
+    'assets/e/avalab-C9Zf3B_CTjCDlOHCmEfLBw-removebg-preview.png',
+    'assets/e/avalab-caB4-gtlRDyIjN9sKPFQTw-removebg-preview.png',
+    'assets/e/avalab-e6Hqm1AXQA2Ifjr9OUCNFA-removebg-preview.png',
+    'assets/e/avalab-ecwiAoFdS56z_FVVnvExqw-removebg-preview.png',
+    'assets/e/avalab-ggkkK6cBSUeQeVvp-akO3A-removebg-preview.png',
+    'assets/e/avalab-GIx_nxwJQj6geia2jAcjVw-removebg-preview.png',
+    'assets/e/avalab-Hs7gc-5pSqmpgr3WMsZVRQ-removebg-preview.png',
+    'assets/e/avalab-lC1PGONDQKWsFLpoIQhGFA-removebg-preview (1).png',
+    'assets/e/avalab-risLHaxsQNKwXYDkMLueuw-removebg-preview.png',
+    'assets/e/avalab-w1eKMyezROaVNGJToIzcAA-removebg-preview.png',
+    'assets/e/avalab-wB-sV0xnToyKHhCEbgVCNw-removebg-preview.png',
+    'assets/e/avalab-X7bv7EPIRMSNbWrqurY7Iw-removebg-preview.png',
+    'assets/e/avalab-yQubWfxpTuCNUGKnMMzMIA-removebg-preview.png',
+    'assets/e/avalab-z9h-icbQTECSbkkFUQQM6w-removebg-preview.png'
+  ];
+  private playerImages = [
+    'assets/f/avalab-frbwGWNxTXCBTZp-LUDAlw-removebg-preview-removebg-preview.png',
+    'assets/f/avalab-20250809-oolTKx_LR2qMT74lQUrH6A-removebg-preview.png',
+    'assets/f/avalab-20250809-vTp6if3HTOu4GEvpDGJ2Jw-removebg-preview.png',
+    'assets/f/avalab-20250809-9Q8Z37j8QUqlYh4fABVroA-removebg-preview.png',
+    'assets/f/avalab-20250809-5SlGdIN9QWmDxwIlukmxTQ__1_-removebg-preview.png',
+    'assets/f/avalab-yndjfwjYTz-SZ_RL_XjASw-removebg-preview-removebg-preview.png',
+    'assets/f/avalab-A7XM1517RY-mMHUAN5yCcA-removebg-preview.png',
+    'assets/f/avalab-17DYvL7wSxy2CaXGrLNceg-removebg-preview.png',
+    'assets/f/avalab-2XrI5m4LSUO6AfoQ4BRX0Q__1_-removebg-preview.png',
+    'assets/f/avalab-WK80inkyQN6Mx9N4VLAseA__1_-removebg-preview.png',
+    'assets/f/avalab-160MwhSCTXyhnbNOD5eyRA__2_-removebg-preview.png',
+    'assets/f/avalab-EfA-Vyu3TEqlUzUcBkdVMg__1_-removebg-preview.png',
+    'assets/f/avalab-A7W7s_elShmcW6OPhgBVSg-removebg-preview (1).png',
+    'assets/f/avalab-3Fs2PZtDTs-csJZfPhZHPw-removebg-preview (1).png',
+    'assets/f/avalab-2Ku5fGojTwqz7--oXmbQFQ-removebg-preview.png',
+    'assets/f/avalab-bfV7vv67TKmW_pWKjqdBJQ-removebg-preview.png',
+    'assets/f/avalab-Id8GFSPMQ6KGerv9DxqMLQ-removebg-preview.png',
+    'assets/f/avalab-6c6JFNdCRQWctiCbyWh0RQ-removebg-preview.png',
+    'assets/f/avalab-W5KnLzu_QvSgLtEeDMRKPA-removebg-preview.png',
+    'assets/f/avalab-8IBippt5Sr24ZFIecthEaQ-removebg-preview.png',
+    'assets/f/avalab-YxgoLxpBRKShwtBIUkViQg-removebg-preview.png',
+    'assets/f/avalab-Hswkvro5SS2KofFuSc8nIA-removebg-preview.png',
+    'assets/f/avalab-xBFeM2QLSha8QJhBUtze-A-removebg-preview.png',
+    'assets/f/avalab-Dv3xHXxLQl-pLyAqS1WD2A-removebg-preview.png',
+    'assets/f/avalab-UlOslxApT52CkDEhYb9m_g-removebg-preview.png',
+    'assets/f/avalab-pZRhwRh4SiSri0GUV9hNLQ-removebg-preview (1).png',
+    'assets/f/avalab-j4IcZs_MTDaLbRSQEIgUtw__1_-removebg-preview.png',
+    'assets/f/avalab-QtIVAwNjQZakOjnll3wlhQ-removebg-preview.png',
+    'assets/f/avalab-zHlo72UzSTaVHdL-_aGC0g-removebg-preview.png',
+    'assets/f/avalab--kkCD6tjTyCKp_HAarzUpQ-removebg-preview.png',
+    'assets/f/avalab-0li2XxGyReaHI0cjfQWSDQ-removebg-preview.png',
+    'assets/f/avalab-wm0z9JV7RsqqpySQC3Zczw-removebg-preview.png',
+    'assets/f/avalab-FL84hQlxRQqwnH_tNoMWZw-removebg-preview.png'
+  ];
+  private bgImages = [
+    'assets/bg/空 (1).png',
+    'assets/bg/空 (101).png',
+    'assets/bg/空 (102).png',
+    'assets/bg/空 (103).png',
+    'assets/bg/空 (104).png',
+    'assets/bg/空 (11).png',
+    'assets/bg/空 (113).png',
+    'assets/bg/空 (116).png',
+    'assets/bg/空 (117).png',
+    'assets/bg/空 (118).png',
+    'assets/bg/空 (12).png',
+    'assets/bg/空 (120).png',
+    'assets/bg/空 (121).png',
+    'assets/bg/空 (122).png',
+    'assets/bg/空 (129).png',
+    'assets/bg/空 (13).png',
+    'assets/bg/空 (138).png',
+    'assets/bg/空 (14).png',
+    'assets/bg/空 (143).png',
+    'assets/bg/空 (150).png',
+    'assets/bg/空 (152).png',
+    'assets/bg/空 (155).png',
+    'assets/bg/空 (156).png',
+    'assets/bg/空 (157).png',
+    'assets/bg/空 (158).png',
+    'assets/bg/空 (164).png',
+    'assets/bg/空 (167).png',
+    'assets/bg/空 (168).png',
+    'assets/bg/空 (17).png',
+    'assets/bg/空 (173).png',
+    'assets/bg/空 (174).png',
+    'assets/bg/空 (177).png',
+    'assets/bg/空 (178).png',
+    'assets/bg/空 (179).png',
+    'assets/bg/空 (18).png',
+    'assets/bg/空 (182).png',
+    'assets/bg/空 (184).png',
+    'assets/bg/空 (19).png',
+    'assets/bg/空 (190).png',
+    'assets/bg/空 (191).png',
+    'assets/bg/空 (192).png',
+    'assets/bg/空 (196).png',
+    'assets/bg/空 (197).png',
+    'assets/bg/空 (198).png',
+    'assets/bg/空 (199).png',
+    'assets/bg/空 (2).png',
+    'assets/bg/空 (20).png',
+    'assets/bg/空 (21).png',
+    'assets/bg/空 (24).png',
+    'assets/bg/空 (25).png',
+    'assets/bg/空 (27).png',
+    'assets/bg/空 (28).png',
+    'assets/bg/空 (3).png',
+    'assets/bg/空 (31).png',
+    'assets/bg/空 (32).png',
+    'assets/bg/空 (4).png',
+    'assets/bg/空 (45).png',
+    'assets/bg/空 (49).png',
+    'assets/bg/空 (5).png',
+    'assets/bg/空 (50).png',
+    'assets/bg/空 (55).png',
+    'assets/bg/空 (6).png',
+    'assets/bg/空 (60).png',
+    'assets/bg/空 (61).png',
+    'assets/bg/空 (62).png',
+    'assets/bg/空 (63).png',
+    'assets/bg/空 (64).png',
+    'assets/bg/空 (65).png',
+    'assets/bg/空 (66).png',
+    'assets/bg/空 (67).png',
+    'assets/bg/空 (68).png',
+    'assets/bg/空 (69).png',
+    'assets/bg/空 (70).png',
+    'assets/bg/空 (71).png',
+    'assets/bg/空 (72).png',
+    'assets/bg/空 (73).png',
+    'assets/bg/空 (74).png',
+    'assets/bg/空 (75).png',
+    'assets/bg/空 (78).png',
+    'assets/bg/空 (79).png',
+    'assets/bg/空 (8).png',
+    'assets/bg/空 (80).png',
+    'assets/bg/空 (81).png',
+    'assets/bg/空 (82).png',
+    'assets/bg/空 (83).png',
+    'assets/bg/空 (84).png',
+    'assets/bg/空 (85).png',
+    'assets/bg/空 (86).png',
+    'assets/bg/空 (88).png',
+    'assets/bg/空 (89).png',
+    'assets/bg/空 (9).png',
+    'assets/bg/空 (92).png',
+    'assets/bg/空 (93).png',
+    'assets/bg/空 (94).png',
+    'assets/bg/空 (95).png',
+    'assets/bg/空 (96).png',
+    'assets/bg/空 (97).png',
+    'assets/bg/空 (98).png',
+    'assets/bg/空 (99).png'
+  ];
+
+  private bgmAudio = [
+    'assets/bgm/cute  girl love magic (1).mp3',
+    'assets/bgm/cute  girl love magic (2).mp3',
+    'assets/bgm/cute  girl love magic (3).mp3',
+    'assets/bgm/cute  girl love magic (4).mp3',
+    'assets/bgm/cute  girl love magic (5).mp3',
+    'assets/bgm/cute  girl love magic (6).mp3',
+    'assets/bgm/cute  girl love magic (7).mp3',
+    'assets/bgm/cute  girl love magic.mp3',
+    'assets/bgm/cute  love magic.mp3',
+    'assets/bgm/Untitled (1).mp3',
+    'assets/bgm/Untitled (2).mp3',
+    'assets/bgm/Untitled (3).mp3',
+    'assets/bgm/Untitled (4).mp3',
+    'assets/bgm/Untitled (5).mp3',
+    'assets/bgm/Untitled (6).mp3',
+    'assets/bgm/Untitled (7).mp3',
+    'assets/bgm/Untitled (8).mp3',
+    'assets/bgm/かわいい女の子　朝　次回予告 (1).mp3',
+    'assets/bgm/かわいい女の子　朝　次回予告 (2).mp3',
+    'assets/bgm/かわいい女の子　朝　次回予告 (3).mp3',
+    'assets/bgm/かわいい女の子　朝　次回予告 (4).mp3',
+    'assets/bgm/かわいい女の子　朝　次回予告.mp3',
+    'assets/bgm/キラキラな朝　次回予告 (1).mp3',
+    'assets/bgm/キラキラな朝　次回予告 (2).mp3',
+    'assets/bgm/キラキラな朝　次回予告.mp3',
+    'assets/bgm/くっころ次回予告 (3) (mp3cut.net).mp3',
+    'assets/bgm/くっころ次回予告 (3).mp3',
+    'assets/bgm/次回予告 (1).mp3',
+    'assets/bgm/次回予告 (2).mp3',
+    'assets/bgm/次回予告 (3).mp3',
+    'assets/bgm/次回予告 (4).mp3',
+    'assets/bgm/次回予告 (5).mp3',
+    'assets/bgm/次回予告 (6).mp3',
+    'assets/bgm/次回予告 (7).mp3',
+    'assets/bgm/次回予告 (8).mp3',
+    'assets/bgm/次回予告.mp3'
+  ];
+
+  constructor() {
+    super('PreloadScene');
+  }
+
+  preload() {
+    const progressBar = this.add.graphics();
+    const progressBox = this.add.graphics();
+    progressBox.fillStyle(0x222222, 0.8);
+    progressBox.fillRect(240, 270, 320, 50);
+
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const loadingText = this.make.text({
+      x: width / 2,
+      y: height / 2 - 50,
+      text: 'Loading...',
+      style: {
+        font: '20px monospace',
+        color: '#ffffff'
+      }
+    });
+    loadingText.setOrigin(0.5, 0.5);
+
+    const percentText = this.make.text({
+      x: width / 2,
+      y: height / 2 - 5,
+      text: '0%',
+      style: {
+        font: '18px monospace',
+        color: '#ffffff'
+      }
+    });
+    percentText.setOrigin(0.5, 0.5);
+
+    this.load.on('progress', (value: number) => {
+      percentText.setText(parseInt(String(value * 100)) + '%');
+      progressBar.clear();
+      progressBar.fillStyle(0xffffff, 1);
+      progressBar.fillRect(250, 280, 300 * value, 30);
+    });
+
+    this.load.on('complete', () => {
+      progressBar.destroy();
+      progressBox.destroy();
+      loadingText.destroy();
+      percentText.destroy();
+      this.scene.start('TitleScene');
+    });
+
+    // アセットの読み込み
+    this.bossImages.forEach((path, i) => this.load.image(`boss_${i}`, path));
+    this.cutinImages.forEach((path, i) => this.load.image(`cutin_${i}`, path));
+    // 省略したアセットも同様に読み込む
+    this.enemyImages.forEach((path, i) => this.load.image(`enemy_${i}`, path));
+    this.playerImages.forEach((path, i) => this.load.image(`player_${i}`, path));
+    this.bgImages.forEach((path, i) => this.load.image(`bg_${i}`, path));
+    this.bgmAudio.forEach((path, i) => this.load.audio(`bgm_${i}`, path));
+  }
+}
