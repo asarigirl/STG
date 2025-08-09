@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 
-export default class GameOverScene extends Phaser.Scene {
+export default class GameClearScene extends Phaser.Scene {
     private finalScore: number = 0;
     private cutinImages: string[] = [];
     private cutinImage!: Phaser.GameObjects.Image;
 
     constructor() {
-        super('GameOverScene');
+        super('GameClearScene');
     }
 
     init(data: { score: number }) {
@@ -23,7 +23,7 @@ export default class GameOverScene extends Phaser.Scene {
         const scaleX = this.scale.width / this.cutinImage.width;
         const scaleY = this.scale.height / this.cutinImage.height;
         const scale = Math.max(scaleX, scaleY);
-        this.cutinImage.setScale(scale).setTint(0x808080); // 少し暗くする
+        this.cutinImage.setScale(scale); // ゲームクリアなので明るいまま
 
         // --- スタイル定義 ---
         const baseTextStyle = {
@@ -34,7 +34,7 @@ export default class GameOverScene extends Phaser.Scene {
         const titleStyle = {
             ...baseTextStyle,
             fontSize: '64px',
-            color: '#ff4444', // 赤色
+            color: '#00ff00', // 緑色
             shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 5, stroke: true, fill: true }
         };
         const scoreStyle = {
@@ -52,19 +52,19 @@ export default class GameOverScene extends Phaser.Scene {
         // --- UI要素 ---
         this.add.rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x000000, 0.5);
 
-        this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'GAME OVER', titleStyle).setOrigin(0.5);
+        this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'GAME CLEAR!', titleStyle).setOrigin(0.5);
 
         this.add.text(this.scale.width / 2, this.scale.height / 2, `Final Score: ${this.finalScore}`, scoreStyle).setOrigin(0.5);
 
-        // --- リトライボタン ---
+        // --- ボタン ---
         const retryButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'タイトルへ戻る', buttonStyle)
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true });
 
         const textBounds = retryButton.getBounds();
         const bg = this.add.graphics();
-        const buttonColor = '#007bff';
-        const buttonHoverColor = '#0056b3';
+        const buttonColor = '#28a745'; // 緑
+        const buttonHoverColor = '#218838';
 
         const drawButton = (color: string) => {
             bg.clear();

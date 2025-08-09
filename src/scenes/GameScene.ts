@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 
+// Bulletクラスは変更なし
 class Bullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'bullet');
@@ -14,7 +15,6 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
 
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
-        // 弾が画面外に出たら非アクティブ化
         if (this.x <= -10 || this.x >= this.scene.scale.width + 10 || this.y <= -10 || this.y >= this.scene.scale.height + 10) {
             this.setActive(false);
             this.setVisible(false);
@@ -41,17 +41,19 @@ export default class GameScene extends Phaser.Scene {
     private isGameOver: boolean = false;
     private isDesktop: boolean = true;
     private isBossBattle: boolean = false;
-    private bossSpawnScore: number = 500;
+    private bossSpawnScore: number = 500; // ボス出現スコア
     private enemyTimer!: Phaser.Time.TimerEvent;
 
-    private spWeaponCooldown: number = 10000;
+    // SPウェポン関連
+    private spWeaponCooldown: number = 10000; // 10秒
     private lastSpWeaponTime: number = 0;
 
+    // 難易度設定
     private difficulty: string = 'ノーマル';
     private difficultySettings = {
         spawnDelay: 1000,
         enemySpeed: 100,
-        bossHp: 100,
+        bossHp: 30, // ボスHPを増加
         bossAttackDelay: 1500
     };
 
@@ -64,22 +66,23 @@ export default class GameScene extends Phaser.Scene {
         this.score = 0;
         this.isGameOver = false;
         this.isBossBattle = false;
-        this.lastSpWeaponTime = -10000;
+        this.lastSpWeaponTime = -10000; // 最初からSPを使えるように
 
         switch (this.difficulty) {
             case 'イージー':
-                this.difficultySettings = { spawnDelay: 1500, enemySpeed: 80, bossHp: 50, bossAttackDelay: 2000 };
+                this.difficultySettings = { spawnDelay: 1500, enemySpeed: 80, bossHp: 10, bossAttackDelay: 2000 };
                 break;
             case 'ノーマル':
-                this.difficultySettings = { spawnDelay: 1000, enemySpeed: 100, bossHp: 100, bossAttackDelay: 1500 };
+                this.difficultySettings = { spawnDelay: 1000, enemySpeed: 100, bossHp: 30, bossAttackDelay: 1500 };
                 break;
             case 'ハード':
-                this.difficultySettings = { spawnDelay: 500, enemySpeed: 150, bossHp: 200, bossAttackDelay: 1000 };
+                this.difficultySettings = { spawnDelay: 500, enemySpeed: 150, bossHp: 50, bossAttackDelay: 1000 };
                 break;
         }
     }
 
     preload() {
+        // 弾のテクスチャ作成
         const graphics = this.add.graphics();
         graphics.fillStyle(0x00ff00, 1);
         graphics.fillCircle(4, 4, 4);
@@ -89,8 +92,13 @@ export default class GameScene extends Phaser.Scene {
 
     create() {
         this.isDesktop = this.sys.game.device.os.desktop;
-        this.scene.launch('UIScene', { isDesktop: this.isDesktop });
+        // UIシーンを起動し、ボスHPの初期値を渡す
+        this.scene.launch('UIScene', { 
+            isDesktop: this.isDesktop, 
+            bossMaxHp: this.difficultySettings.bossHp 
+        });
 
+        // アセットキーの配列を初期化
         for (let i = 0; i < 33; i++) { this.playerImages.push(`player_${i}`); }
         for (let i = 0; i < 99; i++) { this.bgImages.push(`bg_${i}`); }
         for (let i = 0; i < 55; i++) { this.enemyImages.push(`enemy_${i}`); }
@@ -98,20 +106,25 @@ export default class GameScene extends Phaser.Scene {
         for (let i = 0; i < 23; i++) { this.cutinImages.push(`cutin_${i}`); }
         for (let i = 0; i < 5; i++) { this.bossImages.push(`boss_${i}`); }
 
+        // BGM再生
         const randomBgmKey = Phaser.Math.RND.pick(this.bgmAudio);
         this.sound.play(randomBgmKey, { loop: true, volume: 0.5 });
 
+        // 背景をタイル状に配置し、スクロール可能にする
         const randomBgKey = Phaser.Math.RND.pick(this.bgImages);
         this.bg = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, randomBgKey).setOrigin(0, 0);
 
+        // プレイヤー作成
         const randomPlayerKey = Phaser.Math.RND.pick(this.playerImages);
         this.player = this.physics.add.sprite(100, this.scale.height / 2, randomPlayerKey);
         this.player.setCollideWorldBounds(true).setScale(0.5);
 
+        // グループの初期化
         this.bullets = this.physics.add.group({ classType: Bullet, maxSize: 30, runChildUpdate: true });
         this.enemies = this.physics.add.group({ runChildUpdate: true });
         this.bossBullets = this.physics.add.group({ classType: Bullet, maxSize: 100, runChildUpdate: true });
 
+        // 敵の出現タイマー
         this.enemyTimer = this.time.addEvent({
             delay: this.difficultySettings.spawnDelay,
             callback: this.spawnEnemy,
@@ -119,10 +132,12 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         });
 
+        // 衝突判定
         this.physics.add.overlap(this.bullets, this.enemies, this.handleBulletEnemyCollision, undefined, this);
         this.physics.add.overlap(this.player, this.enemies, this.handlePlayerCollision, undefined, this);
         this.physics.add.overlap(this.player, this.bossBullets, this.handlePlayerCollision, undefined, this);
 
+        // 操作キーの設定
         if (this.isDesktop) {
             this.cursors = this.input.keyboard.createCursorKeys();
             this.keys.W = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -130,23 +145,28 @@ export default class GameScene extends Phaser.Scene {
             this.keys.S = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
             this.keys.D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
             this.keys.SPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-            this.keys.SHIFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+            this.keys.X = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X); // SPキーをXに変更
         } else {
+            // スマホ・タブレット操作
             this.time.addEvent({ delay: 200, callback: this.fireBullet, callbackScope: this, loop: true });
             this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => { if (pointer.isDown) { this.player.setPosition(pointer.x, pointer.y); } });
         }
+        // UIシーンからのSP発動イベント
         this.events.on('fireSP', this.fireSpecialWeapon, this);
     }
 
     update(time: number, delta: number) {
         if (this.isGameOver) return;
 
+        // ボス戦への移行
         if (!this.isBossBattle && this.score >= this.bossSpawnScore) {
             this.startBossBattle();
         }
 
-        this.bg.tilePositionX -= 2; // 横スクロール
+        // 背景を右から左へスクロール
+        this.bg.tilePositionX += 2;
 
+        // プレイヤー操作
         if (this.isDesktop) {
             this.player.setVelocity(0);
             if (this.keys.A.isDown) { this.player.setVelocityX(-300); }
@@ -155,8 +175,10 @@ export default class GameScene extends Phaser.Scene {
             else if (this.keys.S.isDown) { this.player.setVelocityY(300); }
 
             if (Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) { this.fireBullet(); }
-            if (Phaser.Input.Keyboard.JustDown(this.keys.SHIFT)) { this.fireSpecialWeapon(time); }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.X)) { this.fireSpecialWeapon(time); } // SPキー
         }
+        
+        // SPクールダウンをUIに通知
         const remainingCooldown = Math.max(0, this.lastSpWeaponTime + this.spWeaponCooldown - time);
         this.events.emit('updateCooldown', remainingCooldown / 1000);
     }
@@ -167,11 +189,34 @@ export default class GameScene extends Phaser.Scene {
     }
 
     private fireSpecialWeapon(currentTime: number) {
+        // クールダウンチェック
         if (currentTime > this.lastSpWeaponTime + this.spWeaponCooldown) {
             this.lastSpWeaponTime = currentTime;
 
-            // ホワイトアウト演出
-            const whiteRect = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff, 1).setOrigin(0, 0);
+            // 画面上の雑魚敵を一掃
+            this.enemies.getChildren().forEach(enemy => {
+                (enemy as Phaser.Physics.Arcade.Sprite).destroy();
+                this.score += 10;
+                this.events.emit('addScore', 10);
+            });
+
+            // ボス戦中ならボスにもダメージ
+            if (this.isBossBattle && this.boss.active) {
+                const damage = 5; // SPのボスへのダメージ
+                const currentHp = this.boss.getData('hp') as number;
+                const newHp = Math.max(0, currentHp - damage);
+                this.boss.setData('hp', newHp);
+                this.events.emit('updateBossHp', newHp); // UIに通知
+                this.boss.setTint(0xffaa00); // ダメージエフェクト
+                this.time.delayedCall(100, () => { this.boss.clearTint(); });
+
+                if (newHp <= 0) {
+                    this.defeatBoss();
+                }
+            }
+            
+            // 派手なエフェクト
+            const whiteRect = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff, 0.8).setOrigin(0, 0);
             this.tweens.add({
                 targets: whiteRect,
                 alpha: 0,
@@ -181,31 +226,17 @@ export default class GameScene extends Phaser.Scene {
 
             const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
             const cutin = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey);
-            // カットイン画像のアスペクト比を維持 (4:3)
-            const cutinWidth = this.scale.width * 0.6; // 画面幅の60%程度
-            const cutinHeight = cutinWidth * (3 / 4); // 4:3の比率で高さを計算
+            const cutinWidth = this.scale.width * 0.6;
+            const cutinHeight = cutinWidth * (3 / 4);
             cutin.setDisplaySize(cutinWidth, cutinHeight);
-
             this.tweens.add({ targets: cutin, alpha: 0, duration: 1000, delay: 500, onComplete: () => { cutin.destroy(); } });
-
-            const killAction = (targetGroup: Phaser.Physics.Arcade.Group) => {
-                targetGroup.getChildren().forEach(t => {
-                    (t as Phaser.Physics.Arcade.Sprite).destroy();
-                    this.score += 10;
-                    this.events.emit('addScore', 10);
-                });
-            }
-            killAction(this.enemies);
-            if(this.isBossBattle) {
-                this.boss.setData('hp', this.boss.getData('hp') - 20); // SPはボスにもダメージ
-            }
         }
     }
 
     private startBossBattle() {
         this.isBossBattle = true;
-        this.enemyTimer.remove();
-        this.enemies.clear(true, true);
+        this.enemyTimer.remove(); // 雑魚敵の出現を停止
+        this.enemies.clear(true, true); // 画面上の雑魚敵を消去
 
         this.sound.stopAll();
         const randomBgmKey = Phaser.Math.RND.pick(this.bgmAudio);
@@ -217,11 +248,14 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.boss, this.handlePlayerCollision, undefined, this);
         this.physics.add.overlap(this.bullets, this.boss, this.handleBulletBossCollision, undefined, this);
 
-        // ボス登場演出 (右から中央へ)
+        // UIにボス戦開始を通知
+        this.events.emit('bossBattleStart');
+
+        // ボス登場演出
         this.tweens.add({ targets: this.boss, x: this.scale.width - 150, duration: 2000, ease: 'Power2' });
-        // ボスの上下移動
         this.tweens.add({ targets: this.boss, y: this.scale.height - 150, duration: 3000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1, delay: 2000 });
 
+        // ボスの攻撃タイマー
         this.time.addEvent({ delay: this.difficultySettings.bossAttackDelay, callback: this.fireBossBullet, callbackScope: this, loop: true });
     }
 
@@ -229,7 +263,6 @@ export default class GameScene extends Phaser.Scene {
         if (!this.boss.active) return;
         const pattern = this.difficulty === 'イージー' ? 'single' : Phaser.Math.RND.pick(['single', 'triple']);
         
-        // プレイヤーの方向へ弾を発射
         const angle = Phaser.Math.Angle.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
         const speed = 200;
 
@@ -254,7 +287,7 @@ export default class GameScene extends Phaser.Scene {
         const y = Phaser.Math.Between(50, this.scale.height - 50);
         const randomEnemyKey = Phaser.Math.RND.pick(this.enemyImages);
         const enemy = this.enemies.create(this.scale.width + 50, y, randomEnemyKey);
-        enemy.setVelocityX(-this.difficultySettings.enemySpeed); // 左方向に移動
+        enemy.setVelocityX(-this.difficultySettings.enemySpeed);
         enemy.setScale(0.5);
         enemy.checkWorldBounds = true;
         enemy.outOfBoundsKill = true;
@@ -269,18 +302,26 @@ export default class GameScene extends Phaser.Scene {
 
     private handleBulletBossCollision(boss: any, bullet: any) {
         (bullet as Bullet).setActive(false).setVisible(false);
+        
         const currentHp = this.boss.getData('hp') as number;
         const newHp = currentHp - 1;
         this.boss.setData('hp', newHp);
+        this.events.emit('updateBossHp', newHp); // UIに通知
+
         this.boss.setTint(0xff0000);
         this.time.delayedCall(100, () => { this.boss.clearTint(); });
+
         if (newHp <= 0) {
-            this.boss.destroy();
-            this.isGameOver = true;
-            this.sound.stopAll();
-            this.scene.stop('UIScene');
-            this.scene.start('GameOverScene', { score: this.score + 1000 });
+            this.defeatBoss();
         }
+    }
+    
+    private defeatBoss() {
+        this.boss.destroy();
+        this.sound.stopAll();
+        this.scene.stop('UIScene');
+        // ゲームクリアシーンへ遷移
+        this.scene.start('GameClearScene', { score: this.score + 1000 });
     }
 
     private handlePlayerCollision(player: any, enemy: any) {
