@@ -19,7 +19,7 @@ export default class UIScene extends Phaser.Scene {
         this.cooldownText = this.add.text(10, 40, 'SP Ready!', { font: '24px Arial', color: '#00ff00' });
 
         if (!this.isDesktop) {
-            const spButton = this.add.text(this.scale.width - 10, this.scale.height - 10, 'SP', {
+            const spButton = this.add.text(this.scale.width - 100, this.scale.height - 50, 'SP', {
                 font: '32px Arial',
                 color: '#ffff00',
                 backgroundColor: '#555555'

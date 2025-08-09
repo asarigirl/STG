@@ -5,16 +5,17 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, 'bullet');
     }
 
-    fire(x: number, y: number) {
+    fire(x: number, y: number, velocityX: number, velocityY: number) {
         this.body.reset(x, y);
         this.setActive(true);
         this.setVisible(true);
-        this.setVelocityY(-500);
+        this.setVelocity(velocityX, velocityY);
     }
 
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
-        if (this.y <= -10 || this.y >= this.scene.scale.height + 10) {
+        // 弾が画面外に出たら非アクティブ化
+        if (this.x <= -10 || this.x >= this.scene.scale.width + 10 || this.y <= -10 || this.y >= this.scene.scale.height + 10) {
             this.setActive(false);
             this.setVisible(false);
         }
@@ -104,7 +105,7 @@ export default class GameScene extends Phaser.Scene {
         this.bg = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, randomBgKey).setOrigin(0, 0);
 
         const randomPlayerKey = Phaser.Math.RND.pick(this.playerImages);
-        this.player = this.physics.add.sprite(this.scale.width / 2, this.scale.height - 100, randomPlayerKey);
+        this.player = this.physics.add.sprite(100, this.scale.height / 2, randomPlayerKey);
         this.player.setCollideWorldBounds(true).setScale(0.5);
 
         this.bullets = this.physics.add.group({ classType: Bullet, maxSize: 30, runChildUpdate: true });
@@ -144,7 +145,7 @@ export default class GameScene extends Phaser.Scene {
             this.startBossBattle();
         }
 
-        this.bg.tilePositionY -= 2;
+        this.bg.tilePositionX -= 2; // 横スクロール
 
         if (this.isDesktop) {
             this.player.setVelocity(0);
@@ -162,15 +163,30 @@ export default class GameScene extends Phaser.Scene {
 
     private fireBullet() {
         const bullet = this.bullets.get() as Bullet;
-        if (bullet) { bullet.fire(this.player.x, this.player.y - 20); }
+        if (bullet) { bullet.fire(this.player.x + 50, this.player.y, 500, 0); }
     }
 
     private fireSpecialWeapon(currentTime: number) {
         if (currentTime > this.lastSpWeaponTime + this.spWeaponCooldown) {
             this.lastSpWeaponTime = currentTime;
+
+            // ホワイトアウト演出
+            const whiteRect = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff, 1).setOrigin(0, 0);
+            this.tweens.add({
+                targets: whiteRect,
+                alpha: 0,
+                duration: 500,
+                onComplete: () => { whiteRect.destroy(); }
+            });
+
             const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
-            const cutin = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey).setDisplaySize(this.scale.width, this.scale.height);
-            this.tweens.add({ targets: cutin, alpha: 0, duration: 1000, onComplete: () => { cutin.destroy(); } });
+            const cutin = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey);
+            // カットイン画像のアスペクト比を維持 (4:3)
+            const cutinWidth = this.scale.width * 0.6; // 画面幅の60%程度
+            const cutinHeight = cutinWidth * (3 / 4); // 4:3の比率で高さを計算
+            cutin.setDisplaySize(cutinWidth, cutinHeight);
+
+            this.tweens.add({ targets: cutin, alpha: 0, duration: 1000, delay: 500, onComplete: () => { cutin.destroy(); } });
 
             const killAction = (targetGroup: Phaser.Physics.Arcade.Group) => {
                 targetGroup.getChildren().forEach(t => {
@@ -196,13 +212,15 @@ export default class GameScene extends Phaser.Scene {
         this.sound.play(randomBgmKey, { loop: true, volume: 0.7 });
 
         const randomBossKey = Phaser.Math.RND.pick(this.bossImages);
-        this.boss = this.physics.add.sprite(this.scale.width / 2, -100, randomBossKey).setScale(0.8);
+        this.boss = this.physics.add.sprite(this.scale.width + 100, this.scale.height / 2, randomBossKey).setScale(0.8);
         this.boss.setData('hp', this.difficultySettings.bossHp);
         this.physics.add.overlap(this.player, this.boss, this.handlePlayerCollision, undefined, this);
         this.physics.add.overlap(this.bullets, this.boss, this.handleBulletBossCollision, undefined, this);
 
-        this.tweens.add({ targets: this.boss, y: 150, duration: 2000, ease: 'Power2' });
-        this.tweens.add({ targets: this.boss, x: this.scale.width - 100, duration: 3000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1, delay: 2000 });
+        // ボス登場演出 (右から中央へ)
+        this.tweens.add({ targets: this.boss, x: this.scale.width - 150, duration: 2000, ease: 'Power2' });
+        // ボスの上下移動
+        this.tweens.add({ targets: this.boss, y: this.scale.height - 150, duration: 3000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1, delay: 2000 });
 
         this.time.addEvent({ delay: this.difficultySettings.bossAttackDelay, callback: this.fireBossBullet, callbackScope: this, loop: true });
     }
@@ -210,21 +228,44 @@ export default class GameScene extends Phaser.Scene {
     private fireBossBullet() {
         if (!this.boss.active) return;
         const pattern = this.difficulty === 'イージー' ? 'single' : Phaser.Math.RND.pick(['single', 'triple']);
+        
+        // プレイヤーの方向へ弾を発射
+        const angle = Phaser.Math.Angle.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
+        const speed = 200;
+
         if (pattern === 'single') {
             const bullet = this.bossBullets.get() as Bullet;
-            if (bullet) { bullet.fire(this.boss.x, this.boss.y + 50); bullet.setVelocityY(200); }
+            if (bullet) {
+                bullet.fire(this.boss.x, this.boss.y, Math.cos(angle) * speed, Math.sin(angle) * speed);
+            }
         }
         if (pattern === 'triple') {
             for (let i = -1; i <= 1; i++) {
                 const bullet = this.bossBullets.get() as Bullet;
-                if (bullet) { bullet.fire(this.boss.x, this.boss.y + 50); bullet.setVelocityY(200); bullet.setVelocityX(i * 100); }
+                if (bullet) {
+                    bullet.fire(this.boss.x, this.boss.y, Math.cos(angle + i * 0.3) * speed, Math.sin(angle + i * 0.3) * speed);
+                }
             }
         }
     }
 
-    private spawnEnemy() { /* ... unchanged ... */ }
+    private spawnEnemy() {
+        if (this.isGameOver) return;
+        const y = Phaser.Math.Between(50, this.scale.height - 50);
+        const randomEnemyKey = Phaser.Math.RND.pick(this.enemyImages);
+        const enemy = this.enemies.create(this.scale.width + 50, y, randomEnemyKey);
+        enemy.setVelocityX(-this.difficultySettings.enemySpeed); // 左方向に移動
+        enemy.setScale(0.5);
+        enemy.checkWorldBounds = true;
+        enemy.outOfBoundsKill = true;
+    }
 
-    private handleBulletEnemyCollision(bullet: any, enemy: any) { /* ... unchanged ... */ }
+    private handleBulletEnemyCollision(bullet: any, enemy: any) {
+        bullet.setActive(false).setVisible(false);
+        enemy.destroy();
+        this.score += 10;
+        this.events.emit('addScore', 10);
+    }
 
     private handleBulletBossCollision(boss: any, bullet: any) {
         (bullet as Bullet).setActive(false).setVisible(false);

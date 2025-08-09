@@ -2,21 +2,26 @@ import Phaser from 'phaser';
 
 export default class GameOverScene extends Phaser.Scene {
     private finalScore: number = 0;
+    private isClear: boolean = false;
 
     constructor() {
         super('GameOverScene');
     }
 
-    init(data: { score: number }) {
+    init(data: { score: number, isClear?: boolean }) {
         this.finalScore = data.score;
+        this.isClear = data.isClear || false;
     }
 
     create() {
-        this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 400, 300, 0x000000, 0.7);
+        this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 600, 400, 0x000000, 0.7);
 
-        this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'GAME OVER', {
+        const titleText = this.isClear ? 'GAME CLEAR!' : 'GAME OVER';
+        const titleColor = this.isClear ? '#00ff00' : '#ff0000';
+
+        this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, titleText, {
             font: '48px Arial',
-            color: '#ff0000'
+            color: titleColor
         }).setOrigin(0.5);
 
         this.add.text(this.scale.width / 2, this.scale.height / 2, `Final Score: ${this.finalScore}` , {
