@@ -17,7 +17,10 @@ export default class TitleScene extends Phaser.Scene {
     // ランダムなカットイン画像を表示
     const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
     this.cutinImage = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey);
-    this.cutinImage.setDisplaySize(this.scale.width, this.scale.height);
+    const scaleX = this.scale.width / this.cutinImage.width;
+    const scaleY = this.scale.height / this.cutinImage.height;
+    const scale = Math.min(scaleX, scaleY);
+    this.cutinImage.setScale(scale);
 
     // 一定時間ごとにカットイン画像を切り替える
     this.time.addEvent({
@@ -73,6 +76,9 @@ export default class TitleScene extends Phaser.Scene {
   private changeCutinImage() {
     const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
     this.cutinImage.setTexture(randomCutinKey);
-    this.cutinImage.setDisplaySize(this.scale.width, this.scale.height);
+    const scaleX = this.scale.width / this.cutinImage.width;
+    const scaleY = this.scale.height / this.cutinImage.height;
+    const scale = Math.min(scaleX, scaleY);
+    this.cutinImage.setScale(scale);
   }
 }

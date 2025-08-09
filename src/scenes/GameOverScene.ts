@@ -3,6 +3,8 @@ import Phaser from 'phaser';
 export default class GameOverScene extends Phaser.Scene {
     private finalScore: number = 0;
     private isClear: boolean = false;
+    private cutinImages: string[] = [];
+    private cutinImage!: Phaser.GameObjects.Image;
 
     constructor() {
         super('GameOverScene');
@@ -14,6 +16,19 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // PreloadSceneで読み込んだカットイン画像のキーを取得
+        for (let i = 0; i < 23; i++) { // 23はcフォルダの画像数
+            this.cutinImages.push(`cutin_${i}`);
+        }
+
+        // ランダムなカットイン画像を表示
+        const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
+        this.cutinImage = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey);
+        const scaleX = this.scale.width / this.cutinImage.width;
+        const scaleY = this.scale.height / this.cutinImage.height;
+        const scale = Math.min(scaleX, scaleY);
+        this.cutinImage.setScale(scale);
+
         this.add.rectangle(this.scale.width / 2, this.scale.height / 2, 600, 400, 0x000000, 0.7);
 
         const titleText = this.isClear ? 'GAME CLEAR!' : 'GAME OVER';
