@@ -52,7 +52,9 @@ export default class TitleScene extends Phaser.Scene {
 
     const rulesText = [
         '【遊び方】',
-        'PC: AWSDキーで移動, Spaceでショット, XキーでSPウェポン',
+        'PC: 矢印キー or AWSDキーで移動',
+        'Spaceでショット, XキーでSPウェポン',
+        'ESCキーで一時停止',
         'スマホ: スワイプで移動, ショットは自動, SPボタンでSPウェポン',
         'SPウェポンは画面の敵を一掃！(クールダウン10秒)',
         '敵を倒してスコアを稼ごう！'
@@ -61,31 +63,39 @@ export default class TitleScene extends Phaser.Scene {
 
     // --- 難易度選択ボタン ---
     const difficulties = ['イージー', 'ノーマル', 'ハード'];
+    const buttonWidth = 150; // ボタンの幅を小さく
+    const buttonHeight = 45; // ボタンの高さを小さく
+    const buttonSpacing = 15; // ボタンの間隔を調整
+    const totalWidth = difficulties.length * buttonWidth + (difficulties.length - 1) * buttonSpacing;
+    const startX = (this.scale.width - totalWidth) / 2;
+
     const buttonColors: { [key: string]: string } = {
-        'イージー': '#28a745', // 緑
-        'ノーマル': '#007bff', // 青
-        'ハード': '#dc3545'   // 赤
+        'イージー': '#28a745', 'ノーマル': '#007bff', 'ハード': '#dc3545'
     };
     const buttonHoverColors: { [key: string]: string } = {
-        'イージー': '#218838',
-        'ノーマル': '#0069d9',
-        'ハード': '#c82333'
+        'イージー': '#218838', 'ノーマル': '#0069d9', 'ハード': '#c82333'
     };
 
     difficulties.forEach((difficulty, i) => {
-        const button = this.add.text(this.scale.width / 2, 300 + i * 70, difficulty, {
+        const buttonX = startX + i * (buttonWidth + buttonSpacing) + buttonWidth / 2;
+        const buttonY = 280; // ボタンの位置を少し上に
+
+        const button = this.add.text(buttonX, buttonY, difficulty, {
             ...buttonStyle,
+            fontSize: '22px', // 文字サイズをさらに小さく
+            fixedWidth: buttonWidth,
+            fixedHeight: buttonHeight,
+            align: 'center'
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
 
-        const textBounds = button.getBounds();
         const bg = this.add.graphics();
         
         const drawButton = (color: string) => {
             bg.clear();
             bg.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-            bg.fillRoundedRect(textBounds.x - 20, textBounds.y - 10, textBounds.width + 40, textBounds.height + 20, 15);
+            bg.fillRoundedRect(button.x - button.width / 2, button.y - button.height / 2, button.width, button.height, 15);
         }
 
         drawButton(buttonColors[difficulty]);

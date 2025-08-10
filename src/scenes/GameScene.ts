@@ -44,6 +44,8 @@ export default class GameScene extends Phaser.Scene {
     private bossSpawnScore: number = 500; // ボス出現スコア
     private enemyTimer!: Phaser.Time.TimerEvent;
 
+    private isPaused: boolean = false; // ポーズ状態
+
     // SPウェポン関連
     private spWeaponCooldown: number = 10000; // 10秒
     private lastSpWeaponTime: number = 0;
@@ -53,7 +55,7 @@ export default class GameScene extends Phaser.Scene {
     private difficultySettings = {
         spawnDelay: 1000,
         enemySpeed: 100,
-        bossHp: 30, // ボスHPを増加
+        bossHp: 30,
         bossAttackDelay: 1500
     };
 
@@ -66,11 +68,12 @@ export default class GameScene extends Phaser.Scene {
         this.score = 0;
         this.isGameOver = false;
         this.isBossBattle = false;
+        this.isPaused = false;
         this.lastSpWeaponTime = -10000; // 最初からSPを使えるように
 
         switch (this.difficulty) {
             case 'イージー':
-                this.difficultySettings = { spawnDelay: 1500, enemySpeed: 80, bossHp: 10, bossAttackDelay: 2000 };
+                this.difficultySettings = { spawnDelay: 1500, enemySpeed: 80, bossHp: 15, bossAttackDelay: 2000 };
                 break;
             case 'ノーマル':
                 this.difficultySettings = { spawnDelay: 1000, enemySpeed: 100, bossHp: 30, bossAttackDelay: 1500 };
@@ -145,7 +148,8 @@ export default class GameScene extends Phaser.Scene {
             this.keys.S = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
             this.keys.D = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
             this.keys.SPACE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-            this.keys.X = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X); // SPキーをXに変更
+            this.keys.X = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+            this.keys.ESC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC); // ESCキーを追加
         } else {
             // スマホ・タブレット操作
             this.time.addEvent({ delay: 200, callback: this.fireBullet, callbackScope: this, loop: true });
@@ -158,6 +162,17 @@ export default class GameScene extends Phaser.Scene {
     update(time: number, delta: number) {
         if (this.isGameOver) return;
 
+        // ポーズ処理
+        if (this.isDesktop && Phaser.Input.Keyboard.JustDown(this.keys.ESC)) {
+            if (this.isPaused) {
+                this.resumeGame();
+            } else {
+                this.pauseGame();
+            }
+        }
+        
+        if (this.isPaused) return; // ポーズ中は以降の処理をスキップ
+
         // ボス戦への移行
         if (!this.isBossBattle && this.score >= this.bossSpawnScore) {
             this.startBossBattle();
@@ -169,10 +184,10 @@ export default class GameScene extends Phaser.Scene {
         // プレイヤー操作
         if (this.isDesktop) {
             this.player.setVelocity(0);
-            if (this.keys.A.isDown) { this.player.setVelocityX(-300); }
-            else if (this.keys.D.isDown) { this.player.setVelocityX(300); }
-            if (this.keys.W.isDown) { this.player.setVelocityY(-300); }
-            else if (this.keys.S.isDown) { this.player.setVelocityY(300); }
+            if (this.keys.A.isDown || this.cursors.left.isDown) { this.player.setVelocityX(-300); }
+            else if (this.keys.D.isDown || this.cursors.right.isDown) { this.player.setVelocityX(300); }
+            if (this.keys.W.isDown || this.cursors.up.isDown) { this.player.setVelocityY(-300); }
+            else if (this.keys.S.isDown || this.cursors.down.isDown) { this.player.setVelocityY(300); }
 
             if (Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) { this.fireBullet(); }
             if (Phaser.Input.Keyboard.JustDown(this.keys.X)) { this.fireSpecialWeapon(time); } // SPキー
@@ -181,6 +196,41 @@ export default class GameScene extends Phaser.Scene {
         // SPクールダウンをUIに通知
         const remainingCooldown = Math.max(0, this.lastSpWeaponTime + this.spWeaponCooldown - time);
         this.events.emit('updateCooldown', remainingCooldown / 1000);
+    }
+
+    private pauseGame() {
+        this.isPaused = true;
+        this.physics.pause();
+        this.sound.pauseAll();
+        this.enemyTimer.paused = true;
+        this.scene.pause('UIScene');
+
+        // ポーズ画面を作成
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0, 0);
+        const resumeButton = this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, 'ゲーム続行', { fontSize: '32px', color: '#fff' }).setOrigin(0.5).setInteractive();
+        const quitButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 50, 'ゲーム終了', { fontSize: '32px', color: '#fff' }).setOrigin(0.5).setInteractive();
+
+        const pauseContainer = this.add.container(0, 0, [overlay, resumeButton, quitButton]);
+        pauseContainer.setName('pauseMenu');
+
+        resumeButton.on('pointerdown', () => this.resumeGame());
+        quitButton.on('pointerdown', () => {
+            this.sound.stopAll();
+            this.scene.stop('UIScene');
+            this.scene.start('TitleScene');
+        });
+    }
+
+    private resumeGame() {
+        this.isPaused = false;
+        const pauseMenu = this.children.getByName('pauseMenu');
+        if (pauseMenu) {
+            pauseMenu.destroy();
+        }
+        this.physics.resume();
+        this.sound.resumeAll();
+        this.enemyTimer.paused = false;
+        this.scene.resume('UIScene');
     }
 
     private fireBullet() {
@@ -240,7 +290,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.sound.stopAll();
         const randomBgmKey = Phaser.Math.RND.pick(this.bgmAudio);
-        this.sound.play(randomBgmKey, { loop: true, volume: 0.7 });
+        this.sound.play(randomBgmKey, { loop: true, volume: 0.25 });
 
         const randomBossKey = Phaser.Math.RND.pick(this.bossImages);
         this.boss = this.physics.add.sprite(this.scale.width + 100, this.scale.height / 2, randomBossKey).setScale(0.8);
