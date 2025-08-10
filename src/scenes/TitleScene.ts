@@ -141,9 +141,23 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   private updateCutinScale() {
-      const scaleX = this.scale.width / this.cutinImage.width;
-      const scaleY = this.scale.height / this.cutinImage.height;
-      const scale = Math.max(scaleX, scaleY); // 画面全体を覆うように調整
-      this.cutinImage.setScale(scale).setScrollFactor(0);
+      const imageAspectRatio = 3 / 4; // 画像の縦横比 (横3:縦4)
+      const screenAspectRatio = this.scale.width / this.scale.height; // 画面の縦横比
+
+      let displayWidth;
+      let displayHeight;
+
+      if (screenAspectRatio > imageAspectRatio) {
+          // 画面が画像より横長の場合、高さを画面に合わせる
+          displayHeight = this.scale.height;
+          displayWidth = displayHeight * imageAspectRatio;
+      } else {
+          // 画面が画像より縦長の場合、幅を画面に合わせる
+          displayWidth = this.scale.width;
+          displayHeight = displayWidth / imageAspectRatio;
+      }
+
+      this.cutinImage.setDisplaySize(displayWidth, displayHeight);
+      this.cutinImage.setScrollFactor(0);
   }
 }
