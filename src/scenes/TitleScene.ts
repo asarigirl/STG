@@ -52,7 +52,7 @@ export default class TitleScene extends Phaser.Scene {
 
     const rulesText = [
         '【遊び方】',
-        'PC: AWSDキーで移動, Spaceでショット, XキーでSPウェポン',
+        'PC: AWSDキーまたは矢印キーで移動, Spaceでショット, XキーでSPウェポン',
         'スマホ: スワイプで移動, ショットは自動, SPボタンでSPウェポン',
         'SPウェポンは画面の敵を一掃！(クールダウン10秒)',
         '敵を倒してスコアを稼ごう！'
@@ -73,7 +73,7 @@ export default class TitleScene extends Phaser.Scene {
     };
 
     difficulties.forEach((difficulty, i) => {
-        const button = this.add.text(this.scale.width / 2, 300 + i * 70, difficulty, {
+        const button = this.add.text(this.scale.width / 2, 300 + i * 50, difficulty, { // 70から50に縮小
             ...buttonStyle,
         })
         .setOrigin(0.5)
@@ -131,9 +131,23 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   private updateCutinScale() {
-      const scaleX = this.scale.width / this.cutinImage.width;
-      const scaleY = this.scale.height / this.cutinImage.height;
-      const scale = Math.max(scaleX, scaleY); // 画面全体を覆うように調整
-      this.cutinImage.setScale(scale).setScrollFactor(0);
+      const imageAspectRatio = 3 / 4; // 画像の縦横比 (横3:縦4)
+      const screenAspectRatio = this.scale.width / this.scale.height; // 画面の縦横比
+
+      let displayWidth;
+      let displayHeight;
+
+      if (screenAspectRatio > imageAspectRatio) {
+          // 画面が画像より横長の場合、高さを画面に合わせる
+          displayHeight = this.scale.height;
+          displayWidth = displayHeight * imageAspectRatio;
+      } else {
+          // 画面が画像より縦長の場合、幅を画面に合わせる
+          displayWidth = this.scale.width;
+          displayHeight = displayWidth / imageAspectRatio;
+      }
+
+      this.cutinImage.setDisplaySize(displayWidth, displayHeight);
+      this.cutinImage.setScrollFactor(0);
   }
 }

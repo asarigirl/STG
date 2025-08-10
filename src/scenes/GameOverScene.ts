@@ -20,10 +20,25 @@ export default class GameOverScene extends Phaser.Scene {
         }
         const randomCutinKey = Phaser.Math.RND.pick(this.cutinImages);
         this.cutinImage = this.add.image(this.scale.width / 2, this.scale.height / 2, randomCutinKey);
-        const scaleX = this.scale.width / this.cutinImage.width;
-        const scaleY = this.scale.height / this.cutinImage.height;
-        const scale = Math.max(scaleX, scaleY);
-        this.cutinImage.setScale(scale).setTint(0x808080); // 少し暗くする
+        
+        // 縦横比4:3に固定し、画面の短い方の辺に合わせて表示
+        const imageAspectRatio = 3 / 4; // 画像の縦横比 (横3:縦4)
+        const screenAspectRatio = this.scale.width / this.scale.height; // 画面の縦横比
+
+        let displayWidth;
+        let displayHeight;
+
+        if (screenAspectRatio > imageAspectRatio) {
+            // 画面が画像より横長の場合、高さを画面に合わせる
+            displayHeight = this.scale.height;
+            displayWidth = displayHeight * imageAspectRatio;
+        } else {
+            // 画面が画像より縦長の場合、幅を画面に合わせる
+            displayWidth = this.scale.width;
+            displayHeight = displayWidth / imageAspectRatio;
+        }
+        this.cutinImage.setDisplaySize(displayWidth, displayHeight);
+        this.cutinImage.setTint(0x808080); // 少し暗くする
 
         // --- スタイル定義 ---
         const baseTextStyle = {
