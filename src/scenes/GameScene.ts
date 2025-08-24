@@ -104,7 +104,7 @@ export default class GameScene extends Phaser.Scene {
         // アセットキーの配列を初期化
         for (let i = 0; i < 53; i++) { this.playerImages.push(`player_${i}`); }
         for (let i = 0; i < 99; i++) { this.bgImages.push(`bg_${i}`); }
-        for (let i = 0; i < 57; i++) { this.enemyImages.push(`enemy_${i}`); }
+        for (let i = 0; i < 52; i++) { this.enemyImages.push(`enemy_${i}`); }
         for (let i = 0; i < 22; i++) { this.bgmAudio.push(`bgm_${i}`); }
         for (let i = 0; i < 23; i++) { this.cutinImages.push(`cutin_${i}`); }
         for (let i = 0; i < 6; i++) { this.bossImages.push(`boss_${i}`); }
