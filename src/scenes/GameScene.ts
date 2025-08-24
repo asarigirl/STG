@@ -102,7 +102,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // 動的にロードされたアセットキーを取得
-        const allTextureKeys = (this.textures as any).getKeys();
+        const allTextureKeys = (this.textures.list as any).getKeys();
         this.playerImages = allTextureKeys.filter((key: string) => key.startsWith('player_'));
         this.bgImages = allTextureKeys.filter((key: string) => key.startsWith('bg_'));
         this.enemyImages = allTextureKeys.filter((key: string) => key.startsWith('enemy_'));
