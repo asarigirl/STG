@@ -102,13 +102,13 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // 動的にロードされたアセットキーを取得
-        const allTextureKeys = this.textures.getKeys();
-        this.playerImages = allTextureKeys.filter(key => key.startsWith('player_'));
-        this.bgImages = allTextureKeys.filter(key => key.startsWith('bg_'));
-        this.enemyImages = allTextureKeys.filter(key => key.startsWith('enemy_'));
-        this.cutinImages = allTextureKeys.filter(key => key.startsWith('cutin_'));
-        this.bossImages = allTextureKeys.filter(key => key.startsWith('boss_'));
-        this.bgmAudio = this.sound.getAllKeys().filter(key => key.startsWith('bgm_'));
+        const allTextureKeys = (this.textures as any).getKeys();
+        this.playerImages = allTextureKeys.filter((key: string) => key.startsWith('player_'));
+        this.bgImages = allTextureKeys.filter((key: string) => key.startsWith('bg_'));
+        this.enemyImages = allTextureKeys.filter((key: string) => key.startsWith('enemy_'));
+        this.cutinImages = allTextureKeys.filter((key: string) => key.startsWith('cutin_'));
+        this.bossImages = allTextureKeys.filter((key: string) => key.startsWith('boss_'));
+        this.bgmAudio = (this.sound as any).getAllKeys().filter((key: string) => key.startsWith('bgm_'));
 
         // BGM再生
         const randomBgmKey = Phaser.Math.RND.pick(this.bgmAudio);
